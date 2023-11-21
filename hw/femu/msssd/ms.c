@@ -113,10 +113,3 @@ int nvme_register_bbssd(FemuCtrl *n)
 
     return 0;
 }
-
-// git test
-// git test: 11/21 14:29
-// git test: 11/21 14:35
-// git test: asdf
-
-// jstset
