@@ -33,7 +33,7 @@ gc_thres_pcent_high=95
 FEMU_OPTIONS="-device femu"
 FEMU_OPTIONS=${FEMU_OPTIONS}",devsz_mb=${ssd_size}"
 FEMU_OPTIONS=${FEMU_OPTIONS}",namespaces=1"
-FEMU_OPTIONS=${FEMU_OPTIONS}",femu_mode=1"
+FEMU_OPTIONS=${FEMU_OPTIONS}",femu_mode=4"
 FEMU_OPTIONS=${FEMU_OPTIONS}",secsz=${secsz}"
 FEMU_OPTIONS=${FEMU_OPTIONS}",secs_per_pg=${secs_per_pg}"
 FEMU_OPTIONS=${FEMU_OPTIONS}",pgs_per_blk=${pgs_per_blk}"

@@ -132,7 +132,7 @@ static void nvme_process_cq_cpl(void *arg, int index_poller)
     int rc;
     int i;
 
-    if (BBSSD(n)) {
+    if (BBSSD(n) || MSSSD(n)) {
         rp = n->to_poller[index_poller];
     }
 
