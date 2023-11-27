@@ -672,6 +672,7 @@ enum LogIdentifier {
     NVME_LOG_SMART_INFO     = 0x02,
     NVME_LOG_FW_SLOT_INFO   = 0x03,
     NVME_LOG_CMD_EFFECTS    = 0x05,
+	NVME_LOG_WAF			= 0x17,
 };
 
 typedef struct NvmePSD {
@@ -1391,6 +1392,9 @@ typedef struct FemuCtrl {
 
     /* Nand Flash Type: SLC/MLC/TLC/QLC/PLC */
     uint8_t         flash_type;
+
+	uint64_t		ByteWrittenHost;
+	uint64_t		ByteWrittenGC;
 } FemuCtrl;
 
 typedef struct NvmePollerThreadArgument {

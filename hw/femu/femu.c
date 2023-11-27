@@ -562,6 +562,9 @@ static void femu_realize(PCIDevice *pci_dev, Error **errp)
     n->features.int_vector_config = g_malloc0(sizeof(*n->features.int_vector_config) * (n->nr_io_queues + 1));
     n->str_param = g_malloc0(sizeof(NvmeDirStrParam));
 
+	n->ByteWrittenHost = 0;
+	n->ByteWrittenGC = 0;
+
     nvme_init_pci(n);
     nvme_init_ctrl(n);
     nvme_init_namespaces(n, errp);

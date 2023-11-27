@@ -215,7 +215,7 @@ struct ssd {
 	uint64_t ByteWrittenGC;
 };
 
-void ssd_init(FemuCtrl *n);
+void ms_ssd_init(FemuCtrl *n);
 
 #ifdef FEMU_DEBUG_FTL
 #define ftl_debug(fmt, ...) \

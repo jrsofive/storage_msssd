@@ -99,7 +99,7 @@ static uint16_t bb_admin_cmd(FemuCtrl *n, NvmeCmd *cmd)
     }
 }
 
-int nvme_register_bbssd(FemuCtrl *n)
+int nvme_register_msssd(FemuCtrl *n)
 {
     n->ext_ops = (FemuExtCtrlOps) {
         .state            = NULL,
@@ -111,7 +111,6 @@ int nvme_register_bbssd(FemuCtrl *n)
         .get_log          = NULL,
     };
 
-    return 0;
+	return 0;
 }
-
 // reset

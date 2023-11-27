@@ -805,6 +805,8 @@ static uint64_t ssd_read(struct ssd *ssd, NvmeRequest *req)
 
 static uint64_t ssd_write(struct ssd *ssd, NvmeRequest *req)
 {
+	fprintf(stderr, "bbssd ssd_write\n");
+
     uint64_t lba = req->slba;
     struct ssdparams *spp = &ssd->sp;
     int len = req->nlb;
