@@ -1395,6 +1395,7 @@ typedef struct FemuCtrl {
 
 	uint64_t		ByteWrittenHost;
 	uint64_t		ByteWrittenGC;
+	int stream_cnt[6];
 } FemuCtrl;
 
 typedef struct NvmePollerThreadArgument {

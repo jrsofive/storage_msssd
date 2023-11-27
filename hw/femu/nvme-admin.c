@@ -871,7 +871,7 @@ static uint16_t nvme_write_amplification(FemuCtrl *n, NvmeCmd *cmd)
 		waf = 100 * (host + gc)/host;
 
 	fprintf(stderr, "host: %lu, gc: %lu, waf: %lu\n", host, gc, waf);
-
+	fprintf(stderr, "stream_cnt %d %d %d %d %d %d\n", n->stream_cnt[0], n->stream_cnt[1], n->stream_cnt[2], n->stream_cnt[3], n->stream_cnt[4], n->stream_cnt[5]);
     uint64_t prp1 = le64_to_cpu(cmd->dptr.prp1);
     uint64_t prp2 = le64_to_cpu(cmd->dptr.prp2);
     

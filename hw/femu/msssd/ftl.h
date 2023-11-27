@@ -217,6 +217,7 @@ struct ssd {
 	uint64_t ByteWrittenGC;
 
 	double wght[6];
+	int stream_cnt[6];
 };
 
 void ms_ssd_init(FemuCtrl *n);

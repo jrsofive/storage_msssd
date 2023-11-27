@@ -375,6 +375,12 @@ void ms_ssd_init(FemuCtrl *n)
 	ssd->wght[0] = ssd->wght[3] = 1.5;
 	ssd->wght[1] = ssd->wght[4] = 1.0;
 	ssd->wght[2] = ssd->wght[5] = 0.5;
+	ssd->stream_cnt[0] = 0;
+	ssd->stream_cnt[1] = 0;
+	ssd->stream_cnt[2] = 0;
+	ssd->stream_cnt[3] = 0;
+	ssd->stream_cnt[4] = 0;
+	ssd->stream_cnt[5] = 0;
 
     ssd_init_params(spp, n);
 
@@ -705,7 +711,7 @@ static struct line *select_victim_line(struct ssd *ssd, bool force)
 /* here ppa identifies the block we want to clean */
 static void clean_one_block(struct ssd *ssd, struct ppa *ppa, int stream)
 {
-	fprintf(stderr, "clean one block: stream %d________________________________________________\n", stream);
+	fprintf(stderr, "clean one block: stream %d\n", stream);
     struct ssdparams *spp = &ssd->sp;
     struct nand_page *pg_iter = NULL;
     int cnt = 0;
@@ -838,6 +844,7 @@ static uint64_t ssd_write(struct ssd *ssd, NvmeRequest *req)
 	NvmeRwCmd *cmd = (NvmeRwCmd*)(&req->cmd);
 	int stream = cmd->dsmgmt >> 16;
 	//fprintf(stderr, "stream: %x\n", stream);
+	ssd->stream_cnt[stream]++;
 
 	ssd->ByteWrittenHost += len * (spp->secs_per_pg * spp->secsz);
 
@@ -890,6 +897,8 @@ static void update_stat(FemuCtrl *n)
 	
 	n->ByteWrittenHost = ssd->ByteWrittenHost;
 	n->ByteWrittenGC = ssd->ByteWrittenGC;
+	for(int i=0; i<6; i++)
+		n->stream_cnt[i] = ssd->stream_cnt[i];
 
 	return;
 }
