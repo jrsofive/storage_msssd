@@ -130,7 +130,7 @@ static void ssd_init_write_pointer(struct ssd *ssd)
     	wpp->ch = 0;
     	wpp->lun = 0;
     	wpp->pg = 0;
-    	wpp->blk = 0;
+    	wpp->blk = i;
     	wpp->pl = 0;
 	}
 }
@@ -372,9 +372,13 @@ void ms_ssd_init(FemuCtrl *n)
 
 	ssd->ByteWrittenHost = 0;
 	ssd->ByteWrittenGC = 0;
-	ssd->wght[0] = ssd->wght[3] = 1.5;
-	ssd->wght[1] = ssd->wght[4] = 1.0;
-	ssd->wght[2] = ssd->wght[5] = 0.5;
+	ssd->wght[0] = 1.25;
+	ssd->wght[1] = 0.5;
+	ssd->wght[2] = 1.5;
+	ssd->wght[3] = 1.0;
+	ssd->wght[4] = 1.0;
+	ssd->wght[5] = 0.5;
+
 	ssd->stream_cnt[0] = 0;
 	ssd->stream_cnt[1] = 0;
 	ssd->stream_cnt[2] = 0;
@@ -549,8 +553,8 @@ static void mark_page_invalid(struct ssd *ssd, struct ppa *ppa)
     bool was_full_line = false;
     struct line *line;
 	
-	int stream;
-	double wght;
+	//int stream;
+	//double wght;
 
     /* update corresponding page status */
     pg = get_pg(ssd, ppa);
@@ -566,8 +570,8 @@ static void mark_page_invalid(struct ssd *ssd, struct ppa *ppa)
 
     /* update corresponding line status */
     line = get_line(ssd, ppa);
-	stream = line->stream;
-    wght = ssd->wght[stream];
+	//stream = line->stream;
+    //wght = ssd->wght[stream];
 
 	ftl_assert(line->ipc >= 0 && line->ipc < spp->pgs_per_line);
     if (line->vpc == spp->pgs_per_line) {
@@ -579,7 +583,8 @@ static void mark_page_invalid(struct ssd *ssd, struct ppa *ppa)
     /* Adjust the position of the victime line in the pq under over-writes */
     if (line->pos) {
         /* Note that line->vpc will be updated by this call */
-        pqueue_change_priority(lm->victim_line_pq, (line->vpc - 1) * wght, line);
+        //pqueue_change_priority(lm->victim_line_pq, (line->vpc - 1) * wght, line);
+        pqueue_change_priority(lm->victim_line_pq, (line->vpc - 1), line);
     } else {
         line->vpc--;
     }
@@ -711,7 +716,6 @@ static struct line *select_victim_line(struct ssd *ssd, bool force)
 /* here ppa identifies the block we want to clean */
 static void clean_one_block(struct ssd *ssd, struct ppa *ppa, int stream)
 {
-	fprintf(stderr, "clean one block: stream %d\n", stream);
     struct ssdparams *spp = &ssd->sp;
     struct nand_page *pg_iter = NULL;
     int cnt = 0;
@@ -728,10 +732,9 @@ static void clean_one_block(struct ssd *ssd, struct ppa *ppa, int stream)
             cnt++;
         }
     }
+	ssd->ByteWrittenGC += cnt * (spp->secs_per_pg * spp->secsz);
 
     ftl_assert(get_blk(ssd, ppa)->vpc == cnt);
-
-	ssd->ByteWrittenGC += cnt * (spp->secs_per_pg * spp->secsz);
 }
 
 static void mark_line_free(struct ssd *ssd, struct ppa *ppa)
@@ -846,11 +849,11 @@ static uint64_t ssd_write(struct ssd *ssd, NvmeRequest *req)
 	//fprintf(stderr, "stream: %x\n", stream);
 	ssd->stream_cnt[stream]++;
 
-	ssd->ByteWrittenHost += len * (spp->secs_per_pg * spp->secsz);
-
     if (end_lpn >= spp->tt_pgs) {
         ftl_err("start_lpn=%"PRIu64",tt_pgs=%d\n", start_lpn, ssd->sp.tt_pgs);
     }
+
+	ssd->ByteWrittenHost += len * (spp->secs_per_pg * spp->secsz);
 
     while (should_gc_high(ssd)) {
         /* perform GC here until !should_gc(ssd) */

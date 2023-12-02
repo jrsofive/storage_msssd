@@ -367,7 +367,17 @@ void ssd_init(FemuCtrl *n)
 
     ftl_assert(ssd);
 
-    ssd_init_params(spp, n);
+	ssd->ByteWrittenHost = 0;
+	ssd->ByteWrittenGC = 0;
+
+	ssd->stream_cnt[0] = 0;
+	ssd->stream_cnt[1] = 0;
+	ssd->stream_cnt[2] = 0;
+	ssd->stream_cnt[3] = 0;
+	ssd->stream_cnt[4] = 0;
+	ssd->stream_cnt[5] = 0;
+    
+	ssd_init_params(spp, n);
 
     /* initialize ssd internal layout architecture */
     ssd->ch = g_malloc0(sizeof(struct ssd_channel) * spp->nchs);
@@ -706,6 +716,7 @@ static void clean_one_block(struct ssd *ssd, struct ppa *ppa)
             cnt++;
         }
     }
+	ssd->ByteWrittenGC += cnt * (spp->secs_per_pg * spp->secsz);
 
     ftl_assert(get_blk(ssd, ppa)->vpc == cnt);
 }
@@ -805,8 +816,6 @@ static uint64_t ssd_read(struct ssd *ssd, NvmeRequest *req)
 
 static uint64_t ssd_write(struct ssd *ssd, NvmeRequest *req)
 {
-	fprintf(stderr, "bbssd ssd_write\n");
-
     uint64_t lba = req->slba;
     struct ssdparams *spp = &ssd->sp;
     int len = req->nlb;
@@ -817,11 +826,18 @@ static uint64_t ssd_write(struct ssd *ssd, NvmeRequest *req)
     uint64_t curlat = 0, maxlat = 0;
     int r;
 
-    if (end_lpn >= spp->tt_pgs) {
+	NvmeRwCmd *cmd = (NvmeRwCmd*)(&req->cmd);
+	int stream = cmd->dsmgmt >> 16;
+	//fprintf(stderr, "stream: %x\n", stream);
+	ssd->stream_cnt[stream]++;
+    
+	if (end_lpn >= spp->tt_pgs) {
         ftl_err("start_lpn=%"PRIu64",tt_pgs=%d\n", start_lpn, ssd->sp.tt_pgs);
     }
 
-    while (should_gc_high(ssd)) {
+	ssd->ByteWrittenHost += len * (spp->secs_per_pg * spp->secsz);
+    
+	while (should_gc_high(ssd)) {
         /* perform GC here until !should_gc(ssd) */
         r = do_gc(ssd, true);
         if (r == -1)
@@ -858,6 +874,18 @@ static uint64_t ssd_write(struct ssd *ssd, NvmeRequest *req)
     }
 
     return maxlat;
+}
+
+static void update_stat(FemuCtrl *n)
+{
+	struct ssd *ssd = n->ssd;
+	
+	n->ByteWrittenHost = ssd->ByteWrittenHost;
+	n->ByteWrittenGC = ssd->ByteWrittenGC;
+	for(int i=0; i<6; i++)
+		n->stream_cnt[i] = ssd->stream_cnt[i];
+
+	return;
 }
 
 static void *ftl_thread(void *arg)
@@ -915,6 +943,8 @@ static void *ftl_thread(void *arg)
             if (should_gc(ssd)) {
                 do_gc(ssd, false);
             }
+			
+			update_stat(n);
         }
     }
 
